@@ -1,0 +1,43 @@
+#!/bin/bash
+
+if [ -e queues.tmp ]; then
+  rm queues.tmp
+fi
+
+# remove active queue
+hg qqueue  | sed '/[^(]*([^)]*)/d' > queues.tmp
+
+IFS=$'\n' read -d '' -r -a lines < queues.tmp
+
+i=1
+for j in "${lines[@]}"
+do
+  echo -n "${i}. "
+  echo $j
+  let i+=1
+done
+
+echo -n "Select the queue you want to active: [1~"; echo "${#lines[@]}]"
+read selection
+
+# Validate input value
+if [ `echo ${selection} | sed 's/^[-+0-9][0-9]*//' | wc -c` -ne 1 ]; then
+  echo "Is not a valid number!!"
+  exit 0
+elif [ ${selection} -le "0" ] || [ ${selection} -gt ${#lines[@]} ]; then
+  echo "Is not a valid range!!"
+  exit 0
+fi
+
+echo "Pop up all patch..."
+# Start to operate hg!
+hg qpop -a
+hg qqueue ${lines[selection]}
+hg qpush -a
+
+# Remove tmp file
+if [ -e queues.tmp ]; then
+  rm queues.tmp
+fi
+
+echo "Done..."
