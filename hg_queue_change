@@ -1,30 +1,27 @@
 #!/bin/bash
 
-if [ -e queues.tmp ]; then
-  rm queues.tmp
-fi
+# Get all queues and filter out current active one.
+QUEUES=`hg qqueue  | sed '/[^(]*([^)]*)/d'`
+QUEUEARRAY=($QUEUES)
 
-# remove active queue
-hg qqueue  | sed '/[^(]*([^)]*)/d' > queues.tmp
-
-IFS=$'\n' read -d '' -r -a lines < queues.tmp
+#IFS=$'\n' read -d '' -r -a QUEUEARRAY < queues.tmp
 
 i=0
-for j in "${lines[@]}"
+for j in "${QUEUEARRAY[@]}"
 do
   echo -n "${i}. "
   echo $j
   let i+=1
 done
 
-echo -n "Select the queue you want to active: [1~"; echo "${#lines[@]}]"
+echo -n "Select the queue you want to active: [1~"; echo "${#QUEUEARRAY[@]}] "
 read selection
 
 # Validate input value
 if [ `echo ${selection} | sed 's/^[-+0-9][0-9]*//' | wc -c` -ne 1 ]; then
   echo "Is not a valid number!!"
   exit 0
-elif [ ${selection} -le "0" ] || [ ${selection} -gt ${#lines[@]} ]; then
+elif [ ${selection} -lt "0" ] || [ ${selection} -gt ${#QUEUEARRAY[@]} ]; then
   echo "Is not a valid range!!"
   exit 0
 fi
@@ -32,12 +29,30 @@ fi
 echo "Pop up all patch..."
 # Start to operate hg!
 hg qpop -a
-hg qqueue ${lines[selection]}
-hg qpush -a
+if [ $? -ne 0 ]; then
+  echo "Refresh/Force pop up/Abort?[R/F/A]"
+  read decision
 
-# Remove tmp file
-if [ -e queues.tmp ]; then
-  rm queues.tmp
+  if [ ${decision} == "R" ] || [ ${decision} == "r" ]; then
+    hg qrefresh
+    hg qpop -a
+  elif [ ${decision} == "F" ] || [ ${decision} == "f" ]; then
+    hg qpop -a -f
+  else
+    exit $?
+  fi
 fi
+
+hg qqueue ${QUEUEARRAY[selection]}
+
+echo -n "hg pull -u before patch push?[y/n] "
+read pullData
+echo -n "${pullData}" > sed 's/.*/\L&/' > pullData
+if [ ${pullData} == "y" ]; then
+  hg pull -u
+fi
+
+# Push all queues.
+hg qpush -a
 
 echo "Done..."
