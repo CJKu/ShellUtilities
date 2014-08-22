@@ -4,33 +4,38 @@
 QUEUES=`hg qqueue  | sed '/[^(]*([^)]*)/d'`
 QUEUEARRAY=($QUEUES)
 
-#IFS=$'\n' read -d '' -r -a QUEUEARRAY < queues.tmp
+# Enumerate and display queue name on stdout
+function queueEnumerate()
+{
+  local i=0
+  for j in "${QUEUEARRAY[@]}"
+  do
+    echo -n "${i}. "
+    echo $j
+    let i+=1
+  done
+}
 
-i=0
-for j in "${QUEUEARRAY[@]}"
-do
-  echo -n "${i}. "
-  echo $j
-  let i+=1
-done
+queueEnumerate
 
+# Choice the queue you want to active.
 echo -n "Select the queue you want to active: [1~"; echo "${#QUEUEARRAY[@]}] "
-read selection
+read SELECTED_QUEUE
 
 # Validate input value
-if [ `echo ${selection} | sed 's/^[-+0-9][0-9]*//' | wc -c` -ne 1 ]; then
+if [ `echo ${SELECTED_QUEUE} | sed 's/^[-+0-9][0-9]*//' | wc -c` -ne 1 ]; then
   echo "Is not a valid number!!"
   exit 0
-elif [ ${selection} -lt "0" ] || [ ${selection} -gt ${#QUEUEARRAY[@]} ]; then
+elif [ ${SELECTED_QUEUE} -lt "0" ] || [ ${SELECTED_QUEUE} -gt ${#QUEUEARRAY[@]} ]; then
   echo "Is not a valid range!!"
   exit 0
 fi
 
+# Step 1: popup the current active one.
 echo "Pop up all patch..."
-# Start to operate hg!
 hg qpop -a
 if [ $? -ne 0 ]; then
-  echo "Refresh/Force pop up/Abort?[R/F/A]"
+  echo "Patch rotten. Refresh/Force pop up/Abort?[R/F/A]"
   read decision
 
   if [ ${decision} == "R" ] || [ ${decision} == "r" ]; then
@@ -39,12 +44,15 @@ if [ $? -ne 0 ]; then
   elif [ ${decision} == "F" ] || [ ${decision} == "f" ]; then
     hg qpop -a -f
   else
+    echo "Abort..."
     exit $?
   fi
 fi
 
-hg qqueue ${QUEUEARRAY[selection]}
+# Step 2: active the selected queue.
+hg qqueue ${QUEUEARRAY[SELECTED_QUEUE]}
 
+# Step 3: pull & update
 echo -n "hg pull -u before patch push?[y/n] "
 read pullData
 echo -n "${pullData}" > sed 's/.*/\L&/' > pullData
@@ -52,7 +60,7 @@ if [ ${pullData} == "y" ]; then
   hg pull -u
 fi
 
-# Push all queues.
+# Step 4: push all patches.
 hg qpush -a
 
 echo "Done..."
