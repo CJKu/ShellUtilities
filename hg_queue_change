@@ -12,7 +12,7 @@ function queueEnumerate()
   do
     echo -n "${i}. "
     echo $j
-    let i+=1
+    ((i+=1)) # or "let i+=1"
   done
 }
 
@@ -34,14 +34,16 @@ fi
 # Step 1: popup the current active one.
 echo "Pop up all patch..."
 hg qpop -a
+# Pop fail. User's call.
 if [ $? -ne 0 ]; then
   echo "Patch rotten. Refresh/Force pop up/Abort?[R/F/A]"
-  read decision
+  read ROTTEN_DECISION
 
-  if [ ${decision} == "R" ] || [ ${decision} == "r" ]; then
+  echo -n "${ROTTEN_DECISION}" > sed 's/.*/\L&/' > ROTTEN_DECISION # lower casting.
+  if [ ${ROTTEN_DECISION:="a"} == "r" ]; then
     hg qrefresh
     hg qpop -a
-  elif [ ${decision} == "F" ] || [ ${decision} == "f" ]; then
+  elif [ ${ROTTEN_DECISION} == "f" ]; then
     hg qpop -a -f
   else
     echo "Abort..."
@@ -54,9 +56,9 @@ hg qqueue ${QUEUEARRAY[SELECTED_QUEUE]}
 
 # Step 3: pull & update
 echo -n "hg pull -u before patch push?[y/n] "
-read pullData
-echo -n "${pullData}" > sed 's/.*/\L&/' > pullData
-if [ ${pullData} == "y" ]; then
+read HGPULLUPDATE
+echo -n "${HGPULLUPDATE}" > sed 's/.*/\L&/' > HGPULLUPDATE # lower casting.
+if [ ${HGPULLUPDATE:="n"} == "y" ]; then
   hg pull -u
 fi
 
