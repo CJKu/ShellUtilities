@@ -7,7 +7,7 @@ QUEUEARRAY=($QUEUES)
 # Enumerate and display queue name on stdout
 function queueEnumerate()
 {
-  local i=0
+  local i=1
   for j in "${QUEUEARRAY[@]}"
   do
     echo -n "${i}. "
@@ -22,11 +22,17 @@ queueEnumerate
 echo -n "Select the queue you want to active: [1~"; echo "${#QUEUEARRAY[@]}] "
 read SELECTED_QUEUE
 
-# Validate input value
+# Validate SELECTED_QUEUE
+if [ ${#SELECTED_QUEUE} -eq 0 ]; then
+  echo "Abort.."
+  exit 0
+fi
+
+((SELECTED_QUEUE-=1)) # To 0-index base.
 if [ `echo ${SELECTED_QUEUE} | sed 's/^[-+0-9][0-9]*//' | wc -c` -ne 1 ]; then
   echo "Is not a valid number!!"
   exit 0
-elif [ ${SELECTED_QUEUE} -lt "0" ] || [ ${SELECTED_QUEUE} -gt ${#QUEUEARRAY[@]} ]; then
+elif [ ${SELECTED_QUEUE} -lt 0 ] || [ ${SELECTED_QUEUE} -ge ${#QUEUEARRAY[@]} ]; then
   echo "Is not a valid range!!"
   exit 0
 fi
@@ -55,7 +61,7 @@ fi
 hg qqueue ${QUEUEARRAY[SELECTED_QUEUE]}
 
 # Step 3: pull & update
-echo -n "hg pull -u before patch push?[y/n] "
+echo -n "hg pull -u before patch push?[y/N] "
 read HGPULLUPDATE
 echo -n "${HGPULLUPDATE}" > sed 's/.*/\L&/' > HGPULLUPDATE # lower casting.
 if [ ${HGPULLUPDATE:="n"} == "y" ]; then
