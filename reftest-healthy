@@ -3,15 +3,20 @@
 # Evaluate numbers of reftest skipped on a specific platform
 #
 
-readonly ALL_PLATFORMS=( window mac b2g android )
-readonly ALL_CONDITIONS=( "skip-if" "random-if" "fail-if" )
+readonly ALL_PLATFORMS=( Linux OSX B2G Android )
+readonly ALL_FAILURE_TYPE=( "skip-if" "random-if" "fail-if" )
 PLATFOMRS=( )
 # by default, gather all skip-if test cases
-CONDITIONS=( skip-if )
+FAILURE_TYPE=( skip-if )
+VERBOSE=0
 
 help_message()
 {
-  echo "Help TODO"
+  echo "EXAMPLES"
+  echo "  reftest-healthy -p B2G -f skip-if -v"
+  echo "  reftest-healthy -p B2G -f random-if -v"
+  echo "  reftest-healthy -p Android -f skip-if -v"
+  echo "  reftest-healthy -p Android -f random-if -v"
   exit 0
 }
 
@@ -59,12 +64,15 @@ do
         shift
       fi
       ;;
-    --condition | -c)
+    --failure | -f)
       d=`echo $2 | sed -n "/^-/!p"`
       if [ "${#d}" -ne "0" ]; then
-        parse_parameter_value $2 ALL_CONDITIONS[@] CONDITIONS
+        parse_parameter_value $2 ALL_FAILURE_TYPE[@] FAILURE_TYPE
         shift
       fi
+      ;;
+    --verbose | -v)
+      VERBOSE=1
       ;;
     -* )
       echo "Unrecognized option: $1"
@@ -77,20 +85,45 @@ do
   shift
 done
 
-echo "Platforms = "${PLATFORMS[@]}""
-echo "Conditions = "${CONDITIONS[@]}""
-
 # OK, input parameters seem to be correct.
 # The platfroms that we are interested on are stored in PLATFORMS
-# The conditions that we are interested on are stored in CONDITIONS
+# The conditions that we are interested on are stored in FAILURE_TYPE
 
 # Gather XXXX.list files
 FILES=( $(find . -name reftest.list) )
+TOTAL_MATCH=0
+TOTAL_TEST_CASE=0
 
 for file in "${FILES[@]}"
 do
-  echo "`sed -n "/#/!p" "$file" |
-         sed -n "/skip-if([!)]*B2G.*)/p"`\
-  "
-  echo "--------------"
+  match_pattern="${FAILURE_TYPE[0]}([!)]*${PLATFORMS[0]}.*"
+  match_items=( "`sed -n "/#/!p" "$file" | sed -n "/${match_pattern}/p"`" )
+  word_count=`echo "$match_items" | wc -c`
+
+  # XXX: why there is one line for no matched file??
+  if test ${word_count} -le "1" ; then
+    match_count=0
+  else
+    match_count=`echo "$match_items" | wc -l`
+  fi
+
+  if [ ${match_count} -ne "0" ] && [ $VERBOSE == "1" ]; then
+    echo "++ ${file}"
+    for test_case in "${match_items[@]}"
+    do
+      echo "${test_case}"
+    done
+    echo "---------------------"
+  fi
+
+  ((TOTAL_MATCH+=${match_count}))
 done
+
+GREEN="\033[32m"
+OFF="\033[0m"
+
+echo "Statistic report"
+echo "* ${GREEN}Failure type${OFF}: ${FAILURE_TYPE[0]}"
+echo "* ${GREEN}Platform${OFF}: ${PLATFORMS[0]}"
+echo "* ${GREEN}Total match${OFF}: "$TOTAL_MATCH""
+
