@@ -90,12 +90,15 @@ done
 # The conditions that we are interested on are stored in FAILURE_TYPE
 
 # Gather XXXX.list files
+# XXX not a correct way to gather reftest files, I should refer to
+# reftest.js.
 FILES=( $(find . -name reftest.list) )
 TOTAL_MATCH=0
 TOTAL_TEST_CASE=0
 
 for file in "${FILES[@]}"
 do
+  # XXX for B2G, it's better to filter out all XUL/XBL test cases
   match_pattern="${FAILURE_TYPE[0]}([!)]*${PLATFORMS[0]}.*"
   match_items=( "`sed -n "/#/!p" "$file" | sed -n "/${match_pattern}/p"`" )
   word_count=`echo "$match_items" | wc -c`
@@ -119,11 +122,12 @@ do
   ((TOTAL_MATCH+=${match_count}))
 done
 
+# Statistic output
 GREEN="\033[32m"
 OFF="\033[0m"
 
 echo "Statistic report"
-echo "* ${GREEN}Failure type${OFF}: ${FAILURE_TYPE[0]}"
-echo "* ${GREEN}Platform${OFF}: ${PLATFORMS[0]}"
-echo "* ${GREEN}Total match${OFF}: "$TOTAL_MATCH""
+echo "* ${GREEN}Failure type${OFF} : ${FAILURE_TYPE[0]}."
+echo "* ${GREEN}Platform${OFF}     : ${PLATFORMS[0]}."
+echo "* ${GREEN}Total match${OFF}  : "$TOTAL_MATCH"."
 
