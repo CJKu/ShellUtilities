@@ -102,26 +102,26 @@ OFF="\033[0m"
 for file in "${FILES[@]}"
 do
   # XXX for B2G, it's better to filter out all XUL/XBL test cases
-  match_pattern="${FAILURE_TYPE[0]}([!)]*${PLATFORMS[0]}.*"
-  match_items=( "$(sed -n "/#/!p" "$file" | sed -n "/${match_pattern}/p")" )
-  word_count=`echo "$match_items" | wc -c`
+  match_pattern="${FAILURE_TYPE[0]}([!)]*${PLATFORMS[0]}.*)"
 
-  # XXX: why there is one line for no matched file??
-  if test ${word_count} -le "1" ; then
-    match_count=0
-  else
-    match_count=`echo "$match_items" | wc -l`
-  fi
+# DO NOT INDENT the following two lines!! Use newline as seperator.
+IFS='
+'
+  # Gather matched records
+  match_items=( $(sed -n "/#/!p" "$file" |            # skip comment start by #
+                  sed -n "/${match_pattern}/p")       # print matched records
+              )
 
-  if [ ${match_count} -ne "0" ] && [ $VERBOSE == "1" ]; then
-    echo "${GREEN}++ ${file}${OFF}"
+  # Display match records on stdout if need.
+  if [ ${#match_items[@]} -ne "0" ] && [ $VERBOSE == "1" ]; then
+    echo "${GREEN}++ ${file}${OFF} (totals: ${#match_items[@]})"
     for test_case in "${match_items[@]}"
     do
-      echo "${test_case}" | sed "s/^/  /"
+      echo "  ${test_case}"
     done
   fi
 
-  ((TOTAL_MATCH+=${match_count}))
+  ((TOTAL_MATCH+=${#match_items[@]}))
 done
 
 # Statistic output
