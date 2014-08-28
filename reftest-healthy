@@ -87,7 +87,7 @@ done
 
 # OK, input parameters seem to be correct.
 # The platfroms that we are interested on are stored in PLATFORMS
-# The conditions that we are interested on are stored in FAILURE_TYPE
+# The failyre types that we concern are stored in FAILURE_TYPE
 
 # Gather XXXX.list files
 # XXX not a correct way to gather reftest files, I should refer to
@@ -96,11 +96,14 @@ FILES=( $(find . -name reftest.list) )
 TOTAL_MATCH=0
 TOTAL_TEST_CASE=0
 
+GREEN="\033[32m"
+OFF="\033[0m"
+
 for file in "${FILES[@]}"
 do
   # XXX for B2G, it's better to filter out all XUL/XBL test cases
   match_pattern="${FAILURE_TYPE[0]}([!)]*${PLATFORMS[0]}.*"
-  match_items=( "`sed -n "/#/!p" "$file" | sed -n "/${match_pattern}/p"`" )
+  match_items=( "$(sed -n "/#/!p" "$file" | sed -n "/${match_pattern}/p")" )
   word_count=`echo "$match_items" | wc -c`
 
   # XXX: why there is one line for no matched file??
@@ -111,21 +114,19 @@ do
   fi
 
   if [ ${match_count} -ne "0" ] && [ $VERBOSE == "1" ]; then
-    echo "++ ${file}"
+    echo "${GREEN}++ ${file}${OFF}"
     for test_case in "${match_items[@]}"
     do
-      echo "${test_case}"
+      echo "${test_case}" | sed "s/^/  /"
     done
-    echo "---------------------"
   fi
 
   ((TOTAL_MATCH+=${match_count}))
 done
 
 # Statistic output
-GREEN="\033[32m"
-OFF="\033[0m"
 
+echo "-------------------------------------------------------"
 echo "Statistic report"
 echo "* ${GREEN}Failure type${OFF} : ${FAILURE_TYPE[0]}."
 echo "* ${GREEN}Platform${OFF}     : ${PLATFORMS[0]}."
