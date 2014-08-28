@@ -122,8 +122,9 @@ IFS='
 done
 
 # Statistic output
-
-echo "-------------------------------------------------------"
+if [ $VERBOSE == "1" ]; then
+  echo "-------------------------------------------------------"
+fi
 echo "Statistic report"
 echo "* ${GREEN}Failure type${OFF} : ${FAILURE_TYPE[0]}."
 echo "* ${GREEN}Platform${OFF}     : ${PLATFORMS[0]}."
