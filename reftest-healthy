@@ -1,12 +1,10 @@
 #! /bin/sh -
 #
-# Evaluate numbers of reftest skipped on a specific platform
 #
 
 readonly ALL_PLATFORMS=( Linux OSX B2G Android )
 readonly ALL_FAILURE_TYPE=( "skip-if" "random-if" "fail-if" )
-PLATFOMRS=( )
-# by default, gather all skip-if test cases
+PLATFOMRS=( B2G )
 FAILURE_TYPE=( skip-if )
 VERBOSE=0
 
@@ -50,7 +48,7 @@ function parse_parameter_value
   eval "$3=( "${params[@]}" )"
 }
 
-# position parameter parsing
+# Positional parameter parsing
 while test $# -gt 0
 do
   case $1 in
@@ -85,21 +83,20 @@ do
   shift
 done
 
-# OK, input parameters seem to be correct.
+# OK, positional parameters seem to be correct.
 # The platfroms that we are interested on are stored in PLATFORMS
 # The failyre types that we concern are stored in FAILURE_TYPE
 
 # Gather XXXX.list files
 # XXX not a correct way to gather reftest files, I should refer to
 # reftest.js.
-FILES=( $(find . -name reftest.list) )
+SOURCE_FILES=( $(find . -name reftest.list) )
 TOTAL_MATCH=0
-TOTAL_TEST_CASE=0
 
 GREEN="\033[32m"
 OFF="\033[0m"
 
-for file in "${FILES[@]}"
+for file in "${SOURCE_FILES[@]}"
 do
   # XXX for B2G, it's better to filter out all XUL/XBL test cases
   match_pattern="${FAILURE_TYPE[0]}([!)]*${PLATFORMS[0]}.*)"
