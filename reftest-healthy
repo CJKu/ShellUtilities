@@ -2,9 +2,9 @@
 #
 #
 
-readonly ALL_PLATFORMS=( Linux OSX B2G Android )
+readonly ALL_PLATFORMS=( "Linux" "OSX" "B2G" "Android" )
 readonly ALL_FAILURE_TYPE=( "skip-if" "random-if" "fail-if" )
-PLATFOMRS=( B2G )
+PLATFORMS=( B2G )
 FAILURE_TYPE=( skip-if )
 VERBOSE=0
 
@@ -23,9 +23,8 @@ help_message()
 # $3 - output valid values
 function parse_parameter_value
 {
-  declare -a params=(${1//:/ })
-  declare -a alls=("${!2}")
-  #platforms=(`echo $1 | cut -d ':' -f  1-`)
+  declare -a params=( ${1//:/ } )  # Replace all ":" by " "
+  declare -a alls=( ${!2} )        # Indirect reference to $2i
 
   # verify platforms
   for i in "${params[@]}"
