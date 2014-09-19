@@ -19,11 +19,14 @@ echo "Generate and put field data into \"${OUT}\""
 LOG_NAME="Silk input resample"
 SILK_LOG_PATTERN="s/.*${LOG_NAME} *, *\([0-9]*\) *, *\([.0-9]*\).*/\1	\2/"
 
-# Convert log string into two fields: frame number + distance
+# Convert log string into two fields: "frame number" "distance"
 # For example,
 # "I/Gecko   ( 6418): Silk input resample , 196827, 0.030"
 # tunrs into
 # "196827 0.030"
+# The format of this output file is tab-delilited text. So that
+# we can use AppleScript to import these record into a table
+# in Numbers
 sed -n "/${LOG_NAME}/p" "${IN}" | sed "${SILK_LOG_PATTERN}" > ${OUT}
 
 echo "Done..."
