@@ -1,0 +1,17 @@
+*.c text
+*.cpp text
+*.h text
+*.idl text
+*.js text 
+*.ipdl text
+*.in text
+*.mk text
+*.xpt text
+*.manifest text
+*.html text
+*.cc text
+*.gyp text
+*.gypi text
+*.py text
+*.sh text
+*.jsm text
